@@ -1,17 +1,11 @@
 from imaplib import IMAP4
 
-def connect_to_email_server(server: str, username: str, password: str) -> IMAP4:
-    """
-    Connects to an IMAP email server and logs in with the provided credentials.
-
-    Args:
-        server (str): The IMAP server address.
-        username (str): The username for the email account.
-        password (str): The password for the email account.
-
-    Returns:
-        IMAP4: An instance of the IMAP4 class representing the connection.
-    """
-    mail = IMAP4(server)
-    mail.login(username, password)
-    return mail
+def resive_emails_from_mailbox(mail: IMAP4, mailbox: str = "INBOX") -> list:
+    mail.select(mailbox)
+    result, data = mail.search(None, "ALL")
+    email_ids = data[0].split()
+    emails = []
+    for email_id in email_ids:
+        result, msg_data = mail.fetch(email_id, "(RFC822)")
+        emails.append(msg_data[0][1])
+    return emails
