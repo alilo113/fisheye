@@ -1,1 +1,2 @@
-print("go fuck yourself")
+if "something":
+    print("go fuck yourself")
