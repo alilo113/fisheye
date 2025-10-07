@@ -1,17 +1,20 @@
-from imaplib import IMAP4
+import imaplib
 
-def connect_to_email_server(server: str, username: str, password: str) -> IMAP4:
-    """
-    Connects to an IMAP email server and logs in with the provided credentials.
-
-    Args:
-        server (str): The IMAP server address.
-        username (str): The username for the email account.
-        password (str): The password for the email account.
-
-    Returns:
-        IMAP4: An instance of the IMAP4 class representing the connection.
-    """
-    mail = IMAP4(server)
-    mail.login(username, password)
-    return mail
+def connect(username, password):
+    try:
+        M = imaplib.IMAP4_SSL("imap.gmail.com")
+        M.login(username, password)
+        return M
+    except imaplib.IMAP4.error:
+        print("LOGIN FAILED!")
+        return None
+    
+def fetch_emails(M, folder="inbox"):
+    M.select(folder)
+    typ, data = M.search(None, 'ALL')
+    mail_ids = data[0].split()
+    emails = []
+    for mail_id in mail_ids:
+        typ, msg_data = M.fetch(mail_id, '(RFC822)')
+        emails.append(msg_data[0][1])
+    return emails
