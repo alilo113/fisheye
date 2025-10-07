@@ -1,27 +1,20 @@
-from imaplib import IMAP4, IMAP4_SSL
+import imaplib
 
-def email_ingestion(
-    host: str,
-    username: str,
-    password: str,
-    mailbox: str = "INBOX",
-    port: int = 993,
-    use_ssl: bool = True,
-    search_criteria: str = 'ALL',
-):
-    if use_ssl:
-        mail = IMAP4_SSL(host, port)
-    else:
-        mail = IMAP4(host, port)
+def connect(username, password):
+    try:
+        M = imaplib.IMAP4_SSL("imap.gmail.com")
+        M.login(username, password)
+        return M
+    except imaplib.IMAP4.error:
+        print("LOGIN FAILED!")
+        return None
     
-    mail.login(username, password)
-    mail.select(mailbox)
-    result, data = mail.search(None, search_criteria)
-    email_ids = data[0].split()
-    
+def fetch_emails(M, folder="inbox"):
+    M.select(folder)
+    typ, data = M.search(None, 'ALL')
+    mail_ids = data[0].split()
     emails = []
-
-    for email_id in email_ids:
-        result, msg_data = mail.fetch(email_id, '(RFC822)')
-        if result == 'OK':
-            emails.append(msg_data[0][1])
+    for mail_id in mail_ids:
+        typ, msg_data = M.fetch(mail_id, '(RFC822)')
+        emails.append(msg_data[0][1])
+    return emails
