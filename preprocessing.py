@@ -9,8 +9,29 @@ def parse_email(raw_email):
     msg = BytesParser(policy=policy.default).parsebytes(raw_email)
     subject = msg['subject']
     sender = msg['from']
-    body = msg.get_body(preferencelist=('plain', 'html')).get_content()
-    return {"from": sender, "subject": subject, "body": body}
+    
+    # Extract body content
+    body_part = msg.get_body(preferencelist=('plain', 'html'))
+    body = body_part.get_content() if body_part else ""
+    
+    # Extract links
+    links = re.findall(r'http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+', body)
+    
+    # Check for attachments
+    has_attachments = False
+    if msg.is_multipart():
+        for part in msg.walk():
+            if part.get_content_disposition() == 'attachment':
+                has_attachments = True
+                break
+    
+    return {
+        "from": sender, 
+        "subject": subject, 
+        "body": body,
+        "links": links,
+        "has_attachments": has_attachments
+    }
 
 def clean_text(text):
     text = html.unescape(text)
